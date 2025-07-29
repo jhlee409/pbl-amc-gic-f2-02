@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ImageDisplay } from "./ImageDisplay";
+import { SimpleImageTest } from "./SimpleImageTest";
 import { BriefcaseMedical, School } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -144,6 +145,7 @@ export function ConversationFlow() {
 
   return (
     <div ref={containerRef} className="space-y-6">
+      <SimpleImageTest />
       {visibleSteps.map((stepIndex) => {
         const step = conversationSteps[stepIndex];
         const isCurrentStep = stepIndex === currentStep;

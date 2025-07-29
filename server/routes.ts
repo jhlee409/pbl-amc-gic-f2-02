@@ -3,6 +3,15 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Simple test endpoint
+  app.get("/api/test-image", (req, res) => {
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    // Send a simple 1x1 transparent PNG
+    const buffer = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64');
+    res.send(buffer);
+  });
+
   // Object storage image proxy route
   app.get("/api/images/:bucket/:filename(*)", async (req, res) => {
     try {
@@ -12,14 +21,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const objectStorageBucket = "PBLGIC02";
       
       // Object storage URL patterns (try multiple common patterns)
+      // Note: Based on the redirect to login, this bucket likely requires authentication
+      // Let's try public access patterns first
       const urlPatterns = [
-        // AWS S3 pattern
+        // Public Google Cloud Storage patterns
+        `https://storage.googleapis.com/${objectStorageBucket}/${filename}`,
+        `https://storage.cloud.google.com/${objectStorageBucket}/${filename}`,
+        // Try with download parameter for public access
+        `https://storage.googleapis.com/download/storage/v1/b/${objectStorageBucket}/o/${encodeURIComponent(filename)}?alt=media`,
+        // Public bucket access
+        `https://${objectStorageBucket}.storage.googleapis.com/${filename}`,
+        // AWS S3 patterns (in case it's actually S3)
         `https://${objectStorageBucket}.s3.amazonaws.com/${filename}`,
         `https://s3.amazonaws.com/${objectStorageBucket}/${filename}`,
-        // Google Cloud Storage pattern
-        `https://storage.googleapis.com/${objectStorageBucket}/${filename}`,
-        // Generic pattern
-        `https://storage.cloud.google.com/${objectStorageBucket}/${filename}`,
         // Alternative S3 patterns
         `https://${objectStorageBucket}.s3.us-east-1.amazonaws.com/${filename}`,
         `https://${objectStorageBucket}.s3.ap-northeast-2.amazonaws.com/${filename}`,
@@ -31,11 +45,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Try each URL pattern until one works
       for (const imageUrl of urlPatterns) {
         try {
+          console.log(`Trying to fetch: ${imageUrl}`);
           const response = await fetch(imageUrl);
-          if (response.ok) {
+          console.log(`Response status: ${response.status}, Content-Type: ${response.headers.get('content-type')} for ${imageUrl}`);
+          
+          // Check if it's actually an image
+          const contentType = response.headers.get('content-type');
+          if (response.ok && contentType && contentType.startsWith('image/')) {
             imageResponse = response;
             console.log(`Successfully fetched image from: ${imageUrl}`);
             break;
+          } else if (response.ok) {
+            console.log(`Response was OK but not an image. Content-Type: ${contentType}`);
+          } else {
+            console.log(`HTTP ${response.status}: ${response.statusText} for ${imageUrl}`);
           }
         } catch (error) {
           lastError = error;
@@ -69,14 +92,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const contentType = getContentType(filename);
       
-      // Set appropriate headers
-      res.set('Content-Type', contentType);
-      res.set('Cache-Control', 'public, max-age=3600');
-      res.set('Access-Control-Allow-Origin', '*');
+      // Set headers and send buffer
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.setHeader('Access-Control-Allow-Origin', '*');
       
-      // Pipe the image data
-      const buffer = await imageResponse.arrayBuffer();
-      res.send(Buffer.from(buffer));
+      // Convert to buffer and send
+      const arrayBuffer = await imageResponse.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      
+      console.log(`Serving image: ${filename}, size: ${buffer.length} bytes, type: ${contentType}`);
+      console.log(`First few bytes: ${buffer.subarray(0, 8).toString('hex')}`);
+      
+      // Use res.end instead of res.send for binary data
+      res.setHeader('Content-Length', buffer.length);
+      res.end(buffer, 'binary');
       
     } catch (error) {
       console.error('Error fetching image:', error);

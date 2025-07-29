@@ -20,20 +20,16 @@ export function ImageDisplay({ bucket, filename, title, className = "" }: ImageD
             src={imageUrl} 
             alt={title}
             className="w-full h-auto object-contain max-h-96"
+            style={{ border: '1px solid #ccc' }}
+            onLoad={() => console.log('Image loaded successfully:', imageUrl)}
             onError={(e) => {
               console.error('Image failed to load:', imageUrl);
-              const target = e.currentTarget;
-              target.style.display = 'none';
-              const errorDiv = document.createElement('div');
-              errorDiv.className = 'bg-gray-100 rounded-lg p-8 text-center text-gray-500';
-              errorDiv.innerHTML = `
-                <div class="text-red-500 text-4xl mb-2">⚠️</div>
-                <p>이미지를 불러올 수 없습니다</p>
-                <p class="text-sm mt-1">${bucket}/${filename}</p>
-              `;
-              target.parentNode?.appendChild(errorDiv);
+              console.error('Error event:', e);
             }}
           />
+        </div>
+        <div className="text-xs text-gray-400 mt-2">
+          Debug URL: <a href={imageUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">{imageUrl}</a>
         </div>
       </CardContent>
     </Card>
