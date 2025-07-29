@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-export function useSupabaseImage(bucket: string, filename: string) {
+export function useObjectStorageImage(bucket: string, filename: string) {
   return useQuery({
     queryKey: ["/api/images", bucket, filename],
     queryFn: async () => {
@@ -13,3 +13,6 @@ export function useSupabaseImage(bucket: string, filename: string) {
     enabled: !!(bucket && filename),
   });
 }
+
+// Keep the old name for backward compatibility
+export const useSupabaseImage = useObjectStorageImage;

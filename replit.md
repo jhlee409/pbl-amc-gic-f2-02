@@ -29,7 +29,7 @@ Preferred communication style: Simple, everyday language.
 ### Data Storage
 - **Primary Database**: PostgreSQL via Neon Database (@neondatabase/serverless) 
 - **Schema Management**: Drizzle Kit for migrations and schema management
-- **Image Storage**: Supabase Storage integration for medical images
+- **Image Storage**: Object Storage (PBLGIC02 bucket) integration for medical images
 - **Session Storage**: PostgreSQL database with Drizzle ORM (production) / In-memory (development)
 
 ## Key Components
@@ -41,7 +41,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Medical Education Features
 - **Interactive Case Studies**: Step-by-step medical case presentation
-- **Image Integration**: Medical imaging display via Supabase storage proxy
+- **Image Integration**: Medical imaging display via object storage proxy
 - **Progress Tracking**: User session management for learning progress
 - **Korean Language Support**: UTF-8 encoding with Korean medical terminology
 
@@ -51,7 +51,7 @@ Preferred communication style: Simple, everyday language.
 - **UI Components**: Complete set of accessible components (buttons, cards, dialogs, etc.)
 
 ### Backend Services
-- **Image Proxy**: Secure image serving from Supabase storage
+- **Image Proxy**: Secure image serving from object storage (PBLGIC02 bucket)
 - **Session Management**: PBL progress tracking and user state persistence
 - **API Routes**: Type-safe endpoints for session management and image serving
 
@@ -65,8 +65,8 @@ Preferred communication style: Simple, everyday language.
 5. Progress automatically saved to maintain learning continuity
 
 ### Image Handling
-1. Frontend requests images via custom hook (useSupabaseImage)
-2. Express server proxies requests to Supabase storage
+1. Frontend requests images via custom hook (useObjectStorageImage)
+2. Express server proxies requests to object storage
 3. Images cached with appropriate headers for performance
 4. Error states handled gracefully with fallback UI
 
@@ -111,7 +111,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Scalability Considerations
 - **Database**: Neon Database auto-scaling for PostgreSQL with full persistence
-- **Images**: Supabase CDN for global image delivery
+- **Images**: Object storage CDN for global image delivery
 - **Session Storage**: PostgreSQL database storage with automatic scaling
 - **Caching**: Browser caching for images and static assets
 

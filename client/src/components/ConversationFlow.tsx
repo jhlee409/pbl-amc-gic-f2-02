@@ -48,7 +48,7 @@ const conversationSteps: ConversationStep[] = [
 2. 둘째 이유는 heartburn 유사 증상이 식도 운동성 질환에서도 동반될 수 있기 때문에 Esophageal manometry를 반드시 같이 시행해야 합니다.
 
 그럼 검사 결과를 확인해 보겠습니다. EGD image, 24hr pH monitoring image, Esophageal manometry image를 차례로 보여드릴까요?`,
-    images: [{ bucket: "pbl02", filename: "functional test menu.png", title: "Functional Test Menu" }],
+    images: [{ bucket: "PBLGIC02", filename: "functional test menu.png", title: "Functional Test Menu" }],
     nextStep: 3,
   },
   {
@@ -56,9 +56,9 @@ const conversationSteps: ConversationStep[] = [
     type: "question",
     content: "검사 결과를 종합하면, 이 환자의 증상은 어떤 범주에 든다고 추정할 수 있나요?",
     images: [
-      { bucket: "pbl02", filename: "EGD.png", title: "1. EGD Image" },
-      { bucket: "pbl02", filename: "Esophageal manometry.png", title: "2. Esophageal Manometry" },
-      { bucket: "pbl02", filename: "24hr pH monitoring result.png", title: "3. 24hr pH Monitoring Result" },
+      { bucket: "PBLGIC02", filename: "EGD.png", title: "1. EGD Image" },
+      { bucket: "PBLGIC02", filename: "Esophageal manometry.png", title: "2. Esophageal Manometry" },
+      { bucket: "PBLGIC02", filename: "24hr pH monitoring result.png", title: "3. 24hr pH Monitoring Result" },
     ],
     options: [
       { text: "1. 병적 위산 역류가 있고, 위산의 역류가 증상의 원인인 경우입니다.", correct: false },
@@ -97,7 +97,7 @@ const conversationSteps: ConversationStep[] = [
     id: 6,
     type: "completion",
     content: "수고하셨습니다.",
-    images: [{ bucket: "pbl02", filename: "case.png", title: "Case Image" }],
+    images: [{ bucket: "PBLGIC02", filename: "case.png", title: "Case Image" }],
   },
 ];
 
