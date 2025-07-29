@@ -53,12 +53,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Get content type
-      const contentType = imageResponse.headers.get('content-type') || 'image/png';
+      // Determine content type from file extension
+      const getContentType = (filename: string): string => {
+        const ext = filename.toLowerCase().split('.').pop();
+        switch (ext) {
+          case 'png': return 'image/png';
+          case 'jpg':
+          case 'jpeg': return 'image/jpeg';
+          case 'gif': return 'image/gif';
+          case 'webp': return 'image/webp';
+          case 'svg': return 'image/svg+xml';
+          default: return 'image/png';
+        }
+      };
+      
+      const contentType = getContentType(filename);
       
       // Set appropriate headers
       res.set('Content-Type', contentType);
       res.set('Cache-Control', 'public, max-age=3600');
+      res.set('Access-Control-Allow-Origin', '*');
       
       // Pipe the image data
       const buffer = await imageResponse.arrayBuffer();
