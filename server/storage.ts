@@ -1,5 +1,8 @@
-import { type User, type InsertUser, type PblSession, type InsertPblSession } from "@shared/schema";
+import { type User, type InsertUser, type PblSession, type InsertPblSession, users, pblSessions } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -46,8 +49,10 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const now = new Date();
     const session: PblSession = {
-      ...insertSession,
       id,
+      userId: insertSession.userId || null,
+      currentStep: insertSession.currentStep || 0,
+      responses: insertSession.responses || [],
       createdAt: now,
       updatedAt: now,
     };
@@ -72,4 +77,56 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database storage implementation
+export class DatabaseStorage implements IStorage {
+  private db;
+
+  constructor() {
+    if (!process.env.DATABASE_URL) {
+      throw new Error("DATABASE_URL environment variable is required");
+    }
+    const sql = neon(process.env.DATABASE_URL);
+    this.db = drizzle(sql);
+  }
+
+  async getUser(id: string): Promise<User | undefined> {
+    const result = await this.db.select().from(users).where(eq(users.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const result = await this.db.select().from(users).where(eq(users.username, username)).limit(1);
+    return result[0];
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const result = await this.db.insert(users).values(insertUser).returning();
+    return result[0];
+  }
+
+  async getPblSession(userId: string): Promise<PblSession | undefined> {
+    const result = await this.db.select().from(pblSessions).where(eq(pblSessions.userId, userId)).limit(1);
+    return result[0];
+  }
+
+  async createPblSession(insertSession: InsertPblSession): Promise<PblSession> {
+    const result = await this.db.insert(pblSessions).values(insertSession).returning();
+    return result[0];
+  }
+
+  async updatePblSession(id: string, updates: Partial<PblSession>): Promise<PblSession> {
+    const result = await this.db.update(pblSessions)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(pblSessions.id, id))
+      .returning();
+    
+    if (result.length === 0) {
+      throw new Error("Session not found");
+    }
+    
+    return result[0];
+  }
+}
+
+// Use database storage in production, memory storage for development
+export const storage = process.env.NODE_ENV === 'development' ? new MemStorage() : new DatabaseStorage();

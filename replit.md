@@ -27,10 +27,10 @@ Preferred communication style: Simple, everyday language.
 - **API Design**: RESTful endpoints with typed responses
 
 ### Data Storage
-- **Primary Database**: PostgreSQL via Neon Database (@neondatabase/serverless)
+- **Primary Database**: PostgreSQL via Neon Database (@neondatabase/serverless) 
 - **Schema Management**: Drizzle Kit for migrations and schema management
 - **Image Storage**: Supabase Storage integration for medical images
-- **Session Storage**: Currently in-memory with interface for PostgreSQL persistence
+- **Session Storage**: PostgreSQL database with Drizzle ORM (production) / In-memory (development)
 
 ## Key Components
 
@@ -71,10 +71,10 @@ Preferred communication style: Simple, everyday language.
 4. Error states handled gracefully with fallback UI
 
 ### Session Persistence
-1. User actions stored in PBL sessions with step tracking
-2. Responses array maintains user choice history
-3. Extensible storage interface allows database persistence
-4. Current implementation uses in-memory storage for development
+1. User actions stored in PBL sessions with step tracking in PostgreSQL database
+2. Responses array maintains user choice history with database persistence
+3. Dual storage implementation: PostgreSQL for production, in-memory for development
+4. Database migrations automatically applied for schema updates
 
 ## External Dependencies
 
@@ -110,9 +110,9 @@ Preferred communication style: Simple, everyday language.
 - **Environment**: Environment variable configuration for secrets
 
 ### Scalability Considerations
-- **Database**: Neon Database auto-scaling for PostgreSQL
+- **Database**: Neon Database auto-scaling for PostgreSQL with full persistence
 - **Images**: Supabase CDN for global image delivery
-- **Session Storage**: Ready for migration from in-memory to PostgreSQL
+- **Session Storage**: PostgreSQL database storage with automatic scaling
 - **Caching**: Browser caching for images and static assets
 
 The application is designed as an educational tool for medical professionals, specifically targeting gastroenterology fellows learning about refractory GERD diagnosis and treatment approaches. The architecture supports both the current educational use case and future expansion to additional medical cases and user management features.
