@@ -65,8 +65,8 @@ Preferred communication style: Simple, everyday language.
 5. Progress automatically saved to maintain learning continuity
 
 ### Image Handling
-1. Frontend requests images via custom hook (useObjectStorageImage)
-2. Express server proxies requests to object storage
+1. Frontend requests images via Supabase Storage API through server proxy
+2. Express server proxies requests to Supabase Storage (pbl02 bucket)
 3. Images cached with appropriate headers for performance
 4. Error states handled gracefully with fallback UI
 
@@ -91,7 +91,7 @@ Preferred communication style: Simple, everyday language.
 - **Code Quality**: ESBuild for production bundling
 
 ### Medical Content Integration
-- **Image Assets**: Medical imaging files stored in Supabase
+- **Image Assets**: Medical imaging files stored in Supabase Storage (pbl02 bucket)
 - **Educational Content**: Korean medical terminology and case studies
 - **User Progress**: Session-based learning state management
 

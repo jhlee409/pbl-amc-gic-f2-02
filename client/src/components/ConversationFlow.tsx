@@ -97,7 +97,7 @@ const conversationSteps: ConversationStep[] = [
     id: 6,
     type: "completion",
     content: "수고하셨습니다.",
-    images: [{ bucket: "PBLGIC02", filename: "case.png", title: "Case Image" }],
+    images: [{ bucket: "pbl02", filename: "case.png", title: "Case Image" }],
   },
 ];
 
