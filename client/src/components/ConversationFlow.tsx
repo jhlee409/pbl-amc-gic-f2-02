@@ -39,7 +39,7 @@ const conversationSteps: ConversationStep[] = [
   },
   {
     id: 2,
-    type: "images",
+    type: "message",
     content: `이 환자의 경우는 검사 코드로 GF0008 (Esophageal manometry (비진정, Impedance))와 GF0009 (24hrs esophageal pH monitory (Impedance)) 검사를 시행해야 합니다.
 
 그런데 pH에 관한 검사인데 Esophageal manometry도 시행해야 하는 이유가 궁금하지 않으신가요?
