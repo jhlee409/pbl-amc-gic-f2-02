@@ -8,12 +8,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { bucket, filename } = req.params;
       
-      if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+      console.log('Environment variables check:', {
+        VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL ? 'SET' : 'MISSING',
+        VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY ? 'SET' : 'MISSING'
+      });
+      
+      if (!process.env.VITE_SUPABASE_URL || !process.env.VITE_SUPABASE_ANON_KEY) {
         return res.status(500).json({ error: "Supabase configuration missing" });
       }
       
       // Construct Supabase storage URL
-      const supabaseUrl = process.env.SUPABASE_URL;
+      const supabaseUrl = process.env.VITE_SUPABASE_URL;
       const imageUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/${filename}`;
       
       console.log(`Fetching image from Supabase: ${imageUrl}`);

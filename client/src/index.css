@@ -29,6 +29,8 @@
   --light-blue-bg: hsl(207, 100%, 94%);
   --light-orange-bg: hsl(32, 100%, 87%);
   --material-blue: hsl(207, 74%, 33%);
+  --light-peach: hsl(15, 100%, 95%);
+  --dark-peach: hsl(15, 100%, 85%);
 }
 
 .dark {
@@ -76,5 +78,36 @@
   
   .material-blue {
     background-color: var(--material-blue);
+  }
+  
+  .light-peach {
+    background-color: var(--light-peach);
+  }
+  
+  .dark-peach {
+    background-color: var(--dark-peach);
+  }
+  
+  .peach-button {
+    background-color: var(--light-peach) !important;
+    color: hsl(15, 30%, 30%) !important;
+    transition: all 0.2s ease-in-out;
+    border: none !important;
+  }
+  
+  .peach-button:hover {
+    background-color: var(--dark-peach) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .peach-button:active {
+    background-color: var(--dark-peach) !important;
+    transform: translateY(0);
+  }
+  
+  .peach-button:focus {
+    background-color: var(--light-peach) !important;
+    color: hsl(15, 30%, 30%) !important;
   }
 }

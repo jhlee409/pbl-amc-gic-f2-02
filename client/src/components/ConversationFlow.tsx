@@ -1,8 +1,9 @@
+import React from "react";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ImageDisplay } from "./ImageDisplay";
-import { BriefcaseMedical, School } from "lucide-react";
+import { BriefcaseMedical } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ConversationStep {
@@ -105,6 +106,7 @@ export function ConversationFlow() {
   const [currentStep, setCurrentStep] = useState(0);
   const [visibleSteps, setVisibleSteps] = useState([0]);
   const [showError, setShowError] = useState(false);
+  const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const containerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -117,6 +119,7 @@ export function ConversationFlow() {
 
   const handleResponse = (nextStep?: number) => {
     if (nextStep !== undefined) {
+      setUserAnswers(prev => ({ ...prev, [currentStep]: "예" }));
       setCurrentStep(nextStep);
       setVisibleSteps(prev => [...prev, nextStep]);
       setShowError(false);
@@ -125,6 +128,7 @@ export function ConversationFlow() {
   };
 
   const handleMultipleChoice = (option: { correct?: boolean; nextStep?: number }) => {
+    setUserAnswers(prev => ({ ...prev, [currentStep]: option.text }));
     if (option.correct) {
       setShowError(false);
       if (option.nextStep !== undefined) {
@@ -173,35 +177,50 @@ export function ConversationFlow() {
                     <div className="text-gray-800 leading-relaxed whitespace-pre-line">
                       {step.content}
                     </div>
-                    {step.type === "message" && step.nextStep !== undefined && isCurrentStep && (
-                      <div className="mt-4 flex justify-center">
-                        <Button
-                          onClick={() => handleResponse(step.nextStep)}
-                          className="light-orange-bg hover:bg-orange-200 text-gray-800 font-medium py-3 px-8 rounded-lg shadow-sm border-0"
-                        >
-                          예
-                        </Button>
-                      </div>
-                    )}
-                    {step.type === "question" && step.options && isCurrentStep && (
-                      <div className="mt-4 space-y-3">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {step.options.map((option, index) => (
-                            <Button
-                              key={index}
-                              onClick={() => handleMultipleChoice(option)}
-                              className="light-orange-bg hover:bg-orange-200 text-gray-800 font-medium py-3 px-4 rounded-lg shadow-sm border-0 text-left justify-start h-auto min-h-[60px] whitespace-normal"
-                            >
-                              {option.text}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               </CardContent>
             </Card>
+
+            {/* User Answer Display */}
+            {userAnswers[stepIndex] && (
+              <div className="flex justify-end mt-3">
+                <Card className="!bg-[hsl(15,100%,95%)] border-gray-200 shadow-sm max-w-md">
+                  <CardContent className="p-4">
+                    <div className="text-gray-700 font-medium">
+                      {userAnswers[stepIndex]}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Selection Buttons - Outside the conversation card */}
+            {step.type === "message" && step.nextStep !== undefined && isCurrentStep && (
+              <div className="mt-4 flex justify-center">
+                <Button
+                  onClick={() => handleResponse(step.nextStep)}
+                  className="peach-button font-medium py-3 px-8 rounded-lg shadow-sm border-0"
+                >
+                  예
+                </Button>
+              </div>
+            )}
+            {step.type === "question" && step.options && isCurrentStep && (
+              <div className="mt-4 space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {step.options.map((option, index) => (
+                    <Button
+                      key={index}
+                      onClick={() => handleMultipleChoice(option)}
+                      className="peach-button font-medium py-3 px-4 rounded-lg shadow-sm border-0 text-left justify-start h-auto min-h-[60px] whitespace-normal"
+                    >
+                      {option.text}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         );
       })}
@@ -215,15 +234,7 @@ export function ConversationFlow() {
         </Alert>
       )}
 
-      {/* Progress Indicator */}
-      <div className="fixed bottom-4 right-4 bg-white rounded-full shadow-lg p-3">
-        <div className="flex items-center space-x-2">
-          <School className="w-5 h-5 text-blue-600" />
-          <span className="text-sm font-medium text-gray-700">
-            단계 {currentStep + 1}/{conversationSteps.length}
-          </span>
-        </div>
-      </div>
+
     </div>
   );
 }
