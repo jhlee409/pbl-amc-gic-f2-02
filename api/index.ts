@@ -1,91 +1,108 @@
 import 'dotenv/config';
-import express, { type Request, Response, NextFunction, Application } from "express";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
-
-// Express 앱을 전역으로 초기화
-let app: Application | null = null;
-let isInitialized = false;
-
-async function initializeApp() {
-  if (isInitialized) return app;
-  
-  app = express();
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: false }));
-
-  app.use((req, res, next) => {
-    const start = Date.now();
-    const path = req.path;
-    let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-    const originalResJson = res.json;
-    res.json = function (bodyJson, ...args) {
-      capturedJsonResponse = bodyJson;
-      return originalResJson.apply(res, [bodyJson, ...args]);
-    };
-
-    res.on("finish", () => {
-      const duration = Date.now() - start;
-      if (path.startsWith("/api")) {
-        let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-        if (capturedJsonResponse) {
-          logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-        }
-
-        if (logLine.length > 80) {
-          logLine = logLine.slice(0, 79) + "…";
-        }
-
-        log(logLine);
-      }
-    });
-
-    next();
-  });
-
-  // 라우트 등록
-  await registerRoutes(app);
-
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    console.error('Express error:', err);
-  });
-
-  // 프로덕션에서는 정적 파일 서빙
-  if (process.env.NODE_ENV === "production") {
-    serveStatic(app);
-  }
-
-  isInitialized = true;
-  return app;
-}
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Vercel 서버리스 함수를 위한 핸들러
-export default async function handler(req: Request, res: Response) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
-    // Express 앱 초기화
-    const expressApp = await initializeApp();
+    const { pathname } = new URL(req.url || '', `https://${req.headers.host}`);
     
-    if (!expressApp) {
-      return res.status(500).json({ error: "Failed to initialize application" });
+    console.log('Request path:', pathname);
+    console.log('Environment variables check:', {
+      VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL ? 'SET' : 'MISSING',
+      VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY ? 'SET' : 'MISSING'
+    });
+
+    // Test endpoint
+    if (pathname === '/api/test') {
+      return res.json({
+        message: "API is working",
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV,
+        supabaseUrl: process.env.VITE_SUPABASE_URL ? 'SET' : 'MISSING',
+        supabaseKey: process.env.VITE_SUPABASE_ANON_KEY ? 'SET' : 'MISSING'
+      });
     }
 
-    // Express 앱으로 요청 처리
-    return new Promise((resolve, reject) => {
-      expressApp!(req, res, (err: any) => {
-        if (err) {
-          console.error('Request handling error:', err);
-          reject(err);
-        } else {
-          resolve(undefined);
+    // Image proxy endpoint
+    if (pathname.startsWith('/api/images/')) {
+      const pathParts = pathname.split('/');
+      if (pathParts.length >= 5) {
+        const bucket = pathParts[3];
+        const filename = pathParts.slice(4).join('/');
+        
+        console.log('Image request:', { bucket, filename });
+        
+        if (!process.env.VITE_SUPABASE_URL) {
+          console.error('VITE_SUPABASE_URL is missing');
+          return res.status(500).json({ 
+            error: "Supabase URL configuration missing",
+            details: "VITE_SUPABASE_URL environment variable is not set"
+          });
         }
-      });
-    });
-  } catch (error) {
+        
+        // Construct Supabase storage URL
+        const supabaseUrl = process.env.VITE_SUPABASE_URL;
+        const imageUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/${filename}`;
+        
+        console.log(`Fetching image from Supabase: ${imageUrl}`);
+        
+        try {
+          const response = await fetch(imageUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (compatible; Vercel-Image-Proxy/1.0)'
+            }
+          });
+          
+          if (!response.ok) {
+            console.error(`Supabase storage error: ${response.status} ${response.statusText}`);
+            return res.status(response.status).json({ 
+              error: "Image not found", 
+              bucket: bucket,
+              filename: filename,
+              supabaseUrl: imageUrl,
+              status: response.status,
+              statusText: response.statusText
+            });
+          }
+          
+          // Check if response is actually an image
+          const contentType = response.headers.get('content-type');
+          if (!contentType || !contentType.startsWith('image/')) {
+            console.error(`Invalid content type from Supabase: ${contentType}`);
+            return res.status(404).json({ 
+              error: "Not an image file",
+              contentType: contentType
+            });
+          }
+          
+          // Set appropriate headers
+          res.setHeader('Content-Type', contentType);
+          res.setHeader('Cache-Control', 'public, max-age=3600');
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          
+          // Stream the image data
+          const arrayBuffer = await response.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          
+          console.log(`Serving image from Supabase: ${filename}, size: ${buffer.length} bytes, type: ${contentType}`);
+          res.send(buffer);
+          
+        } catch (fetchError: any) {
+          console.error('Error fetching image from Supabase:', fetchError);
+          res.status(500).json({ 
+            error: "Failed to fetch image from Supabase",
+            details: fetchError.message
+          });
+        }
+      } else {
+        return res.status(400).json({ error: "Invalid image path" });
+      }
+    }
+
+    // Default response for other paths
+    res.status(404).json({ error: "Not found" });
+    
+  } catch (error: any) {
     console.error('Handler error:', error);
     res.status(500).json({ error: "Internal server error" });
   }
