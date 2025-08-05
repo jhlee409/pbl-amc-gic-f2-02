@@ -1,8 +1,8 @@
-import type { Express } from "express";
+import type { Application } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Application): Promise<Server> {
   // Test endpoint for debugging
   app.get("/api/test", (req, res) => {
     res.json({
@@ -87,7 +87,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Serving image from Supabase: ${filename}, size: ${buffer.length} bytes, type: ${contentType}`);
         res.send(buffer);
         
-      } catch (fetchError) {
+      } catch (fetchError: any) {
         clearTimeout(timeoutId);
         if (fetchError.name === 'AbortError') {
           console.error('Image fetch timeout');
@@ -96,7 +96,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw fetchError;
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching image from Supabase:', error);
       res.status(500).json({ 
         error: "Failed to fetch image from Supabase",

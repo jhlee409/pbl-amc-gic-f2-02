@@ -1,10 +1,10 @@
 import 'dotenv/config';
-import express, { type Request, Response, NextFunction } from "express";
+import express, { type Request, Response, NextFunction, Application } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 // Express 앱을 전역으로 초기화
-let app: express.Application | null = null;
+let app: Application | null = null;
 let isInitialized = false;
 
 async function initializeApp() {
